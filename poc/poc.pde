@@ -8,7 +8,7 @@ ArrayList<int[]> bulletPosB = new ArrayList<int[]>();
 //int bulletX = gun1x + gunSize * 104 + translateX;
 //int bulletY = gun1y + 6 + translateY;
 
-int[][][] guns = new int[2][5][8];
+
 
 static int MAX_BURST_ANGLE = 45;
 static int MAX_BURST_AMOUNT = 10;
@@ -26,19 +26,16 @@ static int WAIT_TIME_INDEX = 5;
 static int WAIT_COUNTER_INDEX = 6;
 static int USAGE_FREQ_INDEX = 7;
 static int GUN_CHOICES = 4;
-
+int[][][] guns = new int[2][GUN_CHOICES][8];
 
 static int LEAST_0 = 0;
 static int LEAST_1 = 1;
 
 int selectedGunA = 0;
 int selectedGunB = 0;
-//int burstAngle;
-//int burstAmount;
-//int bulletSpeed;
-//int bulletSize;
-//int waitCounter;
-//int waitTime;
+
+int[] least = new int[]{0,1,1,1,1,1};
+int[] max = new int[]{MAX_BURST_ANGLE + 1,MAX_BURST_AMOUNT + 1,MAX_BULLET_SPEED + 1,MAX_BURST_SIZE + 1,MAX_BULLET_SIZE + 1, MAX_WAIT_TIME + 1};
 
 void setup() {
   size(1500, 725);           // Set size of window
@@ -60,14 +57,6 @@ void setup() {
       guns[j][i][7] = 0;                                           // Usage frequency
     }
   }
-
-  
-  //burstAngle = 0;
-  //burstAmount = 1;
-  //bulletSpeed = 5;
-  //waitTime = 5;
-  //bulletSize = 1;
-  //waitCounter = 0;
 }
 
 void draw() {
@@ -96,19 +85,9 @@ void draw() {
       stroke(3);
     }
   }
-
-  
-  
-  
 }
 
 void drawGun(int translateX, int translateY, int index, boolean selectedA, int playerIndex) {
-  if(!selectedA) {
-    print("translateX: " + translateX);
-    print("translateY: " + translateY);
-  }
-  
-  println();
   int bulletX = translateX + 142;
   int bulletY = translateY + 107;
   
@@ -125,9 +104,8 @@ void drawGun(int translateX, int translateY, int index, boolean selectedA, int p
   translate(-1 * (translateX + 70), -1 * (translateY + 110));
 
   if(mousePressed && (mouseButton == LEFT)) {
-    if(waitCounter >= waitTime) {
+    if(waitCounter % waitTime == 0) {
       gunFire(bulletX, bulletY, burstAmount, burstAngle, bulletSpeed, bulletSize, selectedA);
-      guns[playerIndex][index][WAIT_COUNTER_INDEX] = 0;
     } else {
        guns[playerIndex][index][WAIT_COUNTER_INDEX]++;
     }
@@ -148,19 +126,16 @@ void drawGun(int translateX, int translateY, int index, boolean selectedA, int p
       bulletPos.set(i, new int[]{bullet[0] + bullet[3], bullet[1], bullet[2], bullet[3], bullet[4]});
       translate(bulletX, bulletY);
       rotate(bulletPos.get(i)[2] * PI / 180);
-      if(!selectedA){
-        println("x: " + (bulletPos.get(i)[0] - bulletX) + ", y: " + (bulletPos.get(i)[1] - bulletY));
-      }
       
       rect(bulletPos.get(i)[0] - bulletX, bulletPos.get(i)[1] - bulletY, 7 * bullet[4], 5 * bullet[4], 0, 18, 18, 0);
       rotate(-1 * bulletPos.get(i)[2] * PI / 180);
+      
       translate(-1 * bulletX, -1 * bulletY);
     }
   }
   
   fill(4, 118, 189);  // Sets fill in for trigger guard to be background
   rect(translateX + 80, translateY + 120, 20, 20, 0, 0, 18, 0);  // Draws trigger guard of gun
-  //curve(gun1x + 27 * gunSize - 2, gun1y + 20 * gunSize - 5, (gun1x + 27 * gunSize - 2) + (gunSize * 20), (gun1y + 20 * gunSize - 5) + (gunSize * 20));
   fill(255);  // Makes body of gun white
   rect(translateX + 130, translateY + 106, 14, 8); // gun muzzle tiny part
   rect(translateX + 130, translateY + 103, 5, 14); // gun muzzle larger part
@@ -212,12 +187,61 @@ void keyPressed() {
       guns[1][selectedGunB][USAGE_FREQ_INDEX]++;
       break;
     case ENTER:
-      //for(int j = 0; j < 2; j++) {
-      //  for(int i = 0; i < 
-      //}
+      int temp;
+      for(int j = 0; j < 2; j++) {
+        int maxIndex1 = 0;
+        int maxIndex2 = 0;
+        int max1 = -1;
+        int max2 = -1;
+        for(int i = 0; i < GUN_CHOICES; i++) {
+          temp = guns[j][i][USAGE_FREQ_INDEX];
+          if(max2 < temp) {
+            maxIndex2 = i;
+            max2 = temp;
+            maxIndex1 = maxIndex2;
+          } else if(max1 < temp) {
+            maxIndex1 = i;
+            max1 = temp;
+          }
+        }
+        guns[j][0][0] = guns[j][maxIndex2][0];   // Burst angle
+        guns[j][0][1] = guns[j][maxIndex2][1];   // Burst amount
+        guns[j][0][2] = guns[j][maxIndex2][2];   // Bullet speed
+        guns[j][0][3] = guns[j][maxIndex2][3];   // Burst size
+        guns[j][0][4] = guns[j][maxIndex2][4];   // Bullet size
+        guns[j][0][5] = guns[j][maxIndex2][5];   // Wait time
+        guns[j][0][6] = 0;                       // Wait counter
+        guns[j][0][7] = 0;                       // Usage frequency
+        
+        guns[j][1][0] = guns[j][maxIndex1][0];   // Burst angle
+        guns[j][1][1] = guns[j][maxIndex1][1];   // Burst amount
+        guns[j][1][2] = guns[j][maxIndex1][2];   // Bullet speed
+        guns[j][1][3] = guns[j][maxIndex1][3];   // Burst size
+        guns[j][1][4] = guns[j][maxIndex1][4];   // Bullet size
+        guns[j][1][5] = guns[j][maxIndex1][5];   // Wait time
+        guns[j][1][6] = 0;                       // Wait counter
+        guns[j][1][7] = 0;                       // Usage frequency
+        
+        for(int i = 2; i < GUN_CHOICES; i++) {
+          for(int k = 0; k < 6; k++) {
+            temp = (int)random(1,11);
+            if(temp <= 2) {
+              guns[j][i][k] = (int)random(least[k], max[k]);
+            } else if(temp <= 5) {
+              guns[j][i][k] = guns[j][0][k];
+            } else {
+              guns[j][i][k] = guns[j][1][k];
+            }
+            
+          }
+          guns[j][i][6] = 0;                                           // Wait counter
+          guns[j][i][7] = 0;                                           // Usage frequency
+        }
+      }
+      selectedGunA = 0;
+      selectedGunB = 0;
       break;
     default:
-    
   }
 }
 
